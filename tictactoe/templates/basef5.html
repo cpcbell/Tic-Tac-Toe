@@ -1,0 +1,31 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{title}}</title>
+    <link rel="stylesheet" href="{{foundationUri}}css/foundation.css" />
+
+    <link rel="stylesheet" href="{{otherStaticUri}}main.css">
+
+    <script src="{{foundationUri}}js/modernizr.js"></script>
+  </head>
+  <body>
+
+<div id="parent-div">
+{% block content %}
+{% endblock content %}
+</div>
+
+<script src="{{foundationUri}}js/jquery.js"></script>
+<script src="{{foundationUri}}js/foundation.min.js"></script>
+<script src="{{foundationUri}}js/foundation/foundation.reveal.js"></script>
+
+<script>
+      $(document).foundation();
+</script>
+
+{% block jquery %}
+{% endblock jquery %}
+  </body>
+</html>

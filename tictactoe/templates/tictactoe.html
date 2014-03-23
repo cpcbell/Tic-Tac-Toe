@@ -1,0 +1,32 @@
+{% extends "basef5.html" %}
+{% load staticfiles %}
+
+{% block content %}
+<div class="row">
+<div class="large-12 columns game-header">
+<h1>{{gameObj.name}}</h1>
+<h2>{{gameObj.description|safe}}</h2>
+</div>
+</div>
+
+<div class="row game-board">
+<div class="large-8 columns">
+<div class="row">
+<div class="small-4 columns square left top"><a href="{{url}}7" id="4">7</a></div>
+<div class="small-4 columns square middle-top"><a href="{{url}}8" id="5">8</a></div>
+<div class="small-4 columns square right top"><a href="{{url}}9" id="6">9</a></div>
+</div>
+<div class="row">
+<div class="small-4 columns square middle-left"><a href="{{url}}4" id="4">4</a></div>
+<div class="small-4 columns square center"><a href="{{url}}5" id="5">5</a></div>
+<div class="small-4 columns square middle-right"><a href="{{url}}6" id="6">6</a></div>
+</div>
+<div class="row">
+<div class="small-4 columns square left bottom"><a href="{{url}}1" id="1">1</a></div>
+<div class="small-4 columns square middle-bottom"><a href="{{url}}2" id="2">2</a></div>
+<div class="small-4 columns square right bottom"><a href="{{url}}3" id="3">3</a></div>
+</div>
+</div>
+</div>
+
+{% endblock content %}
