@@ -21,21 +21,33 @@
 <div class="row game-board">
 <div class="large-8 columns">
 <div class="row">
-<div class="small-4 columns square left top"><a href="{{url}}7" id="4">7</a></div>
-<div class="small-4 columns square middle-top"><a href="{{url}}8" id="5">8</a></div>
-<div class="small-4 columns square right top"><a href="{{url}}9" id="6">9</a></div>
+<div class="small-4 columns square left top"><a href="{{url}}7" id="4">{{currentBoard.6}}</a></div>
+<div class="small-4 columns square middle-top"><a href="{{url}}8" id="5">{{currentBoard.7}}</a></div>
+<div class="small-4 columns square right top"><a href="{{url}}9" id="6">{{currentBoard.8}}</a></div>
 </div>
 <div class="row">
-<div class="small-4 columns square middle-left"><a href="{{url}}4" id="4">4</a></div>
-<div class="small-4 columns square center"><a href="{{url}}5" id="5">5</a></div>
-<div class="small-4 columns square middle-right"><a href="{{url}}6" id="6">6</a></div>
+<div class="small-4 columns square middle-left"><a href="{{url}}4" id="4">{{currentBoard.3}}</a></div>
+<div class="small-4 columns square center"><a href="{{url}}5" id="5">{{currentBoard.4}}</a></div>
+<div class="small-4 columns square middle-right"><a href="{{url}}6" id="6">{{currentBoard.5}}</a></div>
 </div>
 <div class="row">
 <div class="small-4 columns square left bottom"><a href="{{url}}1" id="1">{{currentBoard.0}}</a></div>
-<div class="small-4 columns square middle-bottom"><a href="{{url}}2" id="2">2</a></div>
-<div class="small-4 columns square right bottom"><a href="{{url}}3" id="3">3</a></div>
+<div class="small-4 columns square middle-bottom"><a href="{{url}}2" id="2">{{currentBoard.1}}</a></div>
+<div class="small-4 columns square right bottom"><a href="{{url}}3" id="3">{{currentBoard.2}}</a></div>
 </div>
 </div>
 </div>
 
 {% endblock content %}
+
+{% block jquery %}
+
+jQuery(document).ready(function(){
+
+	if({{isComputerMove}} == 1){
+
+		window.location.reload({{url}{{computersMove}});
+	}
+});
+
+{% endblock jquery %}

@@ -47,7 +47,9 @@ def record_move(request,move):
 
 def game_board(request,move):
 
-	message = None
+	message = '' 
+
+	gameStatus = ''
 
 	if int(move) == 0:
 
@@ -61,7 +63,11 @@ def game_board(request,move):
 
 		initialize_game(request)
 
-		message = 'Please make the first move'
+		message = 'You are Xs, Please make the first move'
+
+	if request.session.get('currentPlayer') is 1:
+
+		message = 'The computer will move next, please wait...'
 
 	gameObj = {'name':'Tic-Tac-Toe',
 		'description':''}
@@ -73,6 +79,9 @@ def game_board(request,move):
 		'foundationUri':settings.FOUNDATION_URI,
 		'otherStaticUri':'http://localhost/tictactoe/',
 		'url':'/tictactoe/',
-		'message':message,},
+		'message':message,
+		'gameStatus':gameStatus,
+		'isComputerMove':isComputerMove,
+		'computersMove':computersMove},
 		context_instance=RequestContext(request))
 
