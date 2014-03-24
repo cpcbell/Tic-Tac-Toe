@@ -42,12 +42,36 @@
 
 {% block jquery %}
 
+<script type="text/javascript">
+
+/**
 jQuery(document).ready(function(){
 
-	if({{isComputerMove}} == 1){
+	var isComputerMove = '{{isComputerMove}}';
 
-		window.location.reload({{url}{{computersMove}});
+	if(parseInt(isComputerMove) == 1){ 
+
+		var computerClick = '#{{computerMove}}';
+	
+		console.log('Computer Move: '+computerClick);
+		
+		/**
+		jQuery('.game-board a').on('click',function(e){
+
+			e.preventDefault();
+		});
+		
+		//var reloadUrl = '{{url}}'+'{{computerMove}';
+
+		setTimeout(function(){
+
+			jQuery(computerClick).trigger('click');
+		},2000);
+	
 	}
 });
+		*/
+
+</script>
 
 {% endblock jquery %}
