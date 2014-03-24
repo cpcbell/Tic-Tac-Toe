@@ -24,7 +24,10 @@ def available_moves(request):
 	request.session['player_moves'] = []
 	request.session['computer_moves'] = []
 
+	request.session['error'] = None 
+
 	request.session['block'] = None
+	request.session['winner'] = None
 	request.session['win'] = None
 
 	return True
@@ -68,15 +71,13 @@ def judge_move(move):
 	else:
 		return 1
 
-def block_a_win(request):
-
-	block_wins = BlockWins()
+def get_a_win(request,player):
 
 	wins = Wins()
 
 	request.session['block'] = None
 
-	if len(request.session['player_moves']) > 1:
+	if len(request.session[player]) > 1:
 
 		for win in request.session['available_moves']:
 
@@ -84,7 +85,7 @@ def block_a_win(request):
 
 			if len(copy_player_moves) > 2:
 
-				copy_player_moves = [request.session['player_moves'][-1],request.session['player_moves'][-2]]
+				copy_player_moves = [request.session[player][-1],request.session[player][-2]]
 			
 			copy_player_moves.append(int(win))
 
@@ -92,7 +93,10 @@ def block_a_win(request):
 
 				if set(this_win) == set(copy_player_moves):
 
-					request.session['block'] = win 
+					if player is 'player':
+						request.session['block'] = win 
+					else:
+						request.session['win'] = win
 
 	return request 
 		 
@@ -117,6 +121,12 @@ def is_a_win(request,player):
 	
 def record_move(request,move):
 
+	if int(move) not in request.session['available_moves']:
+
+		request.session['error'] = 'Illegal Move'
+		
+		return request
+
 	movePosition = int(move) - 1
 
 	request.session['available_moves'].remove(int(move))
@@ -125,7 +135,7 @@ def record_move(request,move):
 
 	if is_a_win(request,'player_moves'):
 
-		request.session['win'] = 'Player' 
+		request.session['winner'] = 'Player' 
 
 		return request
 
@@ -133,7 +143,15 @@ def record_move(request,move):
 
 	request.session['current_board'][movePosition] = request.session['player'][0] 
 
-	request = block_a_win(request) 
+	"""
+	block the player win
+	"""
+	request = get_a_win(request,'player_moves') 
+
+	"""
+	get the computer win
+	"""
+	request = get_a_win(request,'computer_moves') 
 
 	"""
 	this is the computer player
@@ -141,6 +159,10 @@ def record_move(request,move):
 	if request.session['block'] is not None:
 
 		move = int(request.session['block'])
+
+	elif request.session['win'] is not None:
+
+		move = int(request.session['win'])
 	else:
 
 		if 1 in request.session['available_moves']:
@@ -185,13 +207,18 @@ def record_move(request,move):
 
 	if is_a_win(request,'computer_moves'):
 
-		request.session['win'] = 'Computer' 
+		request.session['winner'] = 'Computer' 
+
+		request.session['current_board'][movePosition] = request.session['player'][1] 
 
 		return request
 
-	request.session['available_moves'].remove(int(move))
+	try:
+		request.session['available_moves'].remove(int(move))
 
-	request.session['current_board'][movePosition] = request.session['player'][1] 
+		request.session['current_board'][movePosition] = request.session['player'][1] 
+	except:
+		None
 
 	return request 
 
@@ -204,6 +231,8 @@ def game_board(request,move):
 	isComputerMove = 0
 
 	computerMove = 0
+
+	request.session['error'] = None
 
 	if int(move) == 0:
 
@@ -231,6 +260,10 @@ def game_board(request,move):
 		isComputerMove = 0
 	"""
 
+	if request.session['error'] is not None:
+
+		message = request.session['error']
+
 	gameObj = {'name':'Tic-Tac-Toe',
 		'description':''}
 
@@ -245,7 +278,7 @@ def game_board(request,move):
 		'gameStatus':request.session['available_moves'],
 		'playerMoves':request.session['player_moves'],
 		'computerMoves':request.session['computer_moves'],
-		'win':request.session['win'],
+		'winner':request.session['winner'],
 		'isComputerMove':isComputerMove,
 		'computerMove':computerMove},
 		context_instance=RequestContext(request))
