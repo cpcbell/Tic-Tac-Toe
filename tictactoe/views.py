@@ -6,7 +6,7 @@ from django.template import RequestContext
 
 from django.conf import settings
 
-from tictactoe.models import PossibleWins 
+from tictactoe.models import Wins,BlockWins 
 
 # Create your views here.
 
@@ -21,11 +21,17 @@ def available_moves(request):
 
 	request.session['player'] = ['X','O']
 
+	request.session['player_moves'] = []
+	request.session['computer_moves'] = []
+
+	request.session['block'] = None
+	request.session['win'] = None
+
 	return True
 
 def initialize_game(request):
 
-	possible_wins = PossibleWins()
+	possible_wins = Wins()
 
 	available_moves(request)
 
@@ -61,72 +67,133 @@ def judge_move(move):
 		return 2
 	else:
 		return 1
+
+def block_a_win(request):
+
+	block_wins = BlockWins()
+
+	wins = Wins()
+
+	request.session['block'] = None
+
+	if len(request.session['player_moves']) > 1:
+
+		for win in request.session['available_moves']:
+
+			copy_player_moves = list(request.session['player_moves'])
+
+			if len(copy_player_moves) > 2:
+
+				copy_player_moves = [request.session['player_moves'][-1],request.session['player_moves'][-2]]
+			
+			copy_player_moves.append(int(win))
+
+			for this_win in wins.wins:
+
+				if set(this_win) == set(copy_player_moves):
+
+					request.session['block'] = win 
+
+	return request 
+		 
+def is_a_win(request,player):
+
+	wins = Wins()
+
+	if len(request.session[player]) > 2:
+
+		copy_list = [request.session[player][-1],request.session[player][-2],request.session[player][-3]]
+
+	else:
+		copy_list = list(request.session[player])
+
+	for win in wins.wins:
+
+		if set(win) == set(copy_list):
+
+			return True
+
+	return False
 	
 def record_move(request,move):
 
-	request.session['currentMove'] += 1
+	movePosition = int(move) - 1
 
-	if request.session['currentPlayer'] is 0:
-		request.session['currentPlayer'] = 1
+	request.session['available_moves'].remove(int(move))
 
-		"""
-		This is their first move, lets see if they are expert, moderate or beginner
-		request.session['currentPlayer'] = 1
+	request.session['player_moves'].append(int(move))
 
-		request.session['moveStrength'] = judge_move(move)
+	if is_a_win(request,'player_moves'):
 
-		movePosition = int(move) - 1;
+		request.session['win'] = 'Player' 
 
-		request.session['current_board'][movePosition] = request.session['player'][0] 
-	else:
-		"""
-		"""
-		this is the human player
-		"""
+		return request
 
-	request.session['moveStrength'] = judge_move(move)
-
-	movePosition = int(move) - 1;
+	request.session['moveStrength'] = judge_move(int(move))
 
 	request.session['current_board'][movePosition] = request.session['player'][0] 
 
-	"""
-	when done set player to next
-	"""
-	request.session['currentPlayer'] = 2
-		
-	#else:
-	request.session['currentMove'] += 1
+	request = block_a_win(request) 
+
 	"""
 	this is the computer player
 	"""
-	if 1 in request.session['current_board']:
+	if request.session['block'] is not None:
+
+		move = int(request.session['block'])
+	else:
+
+		if 1 in request.session['available_moves']:
 			
-		movePosition = 0
-	elif 3 in request.session['current_board']:
-		movePosition = 2
-	elif 7 in request.session['current_board']:
-		movePosition = 6
-	elif 9 in request.session['current_board']:
-		movePosition = 8
-	elif 5 in request.session['current_board']:
-		movePosition = 4
-	elif 2 in request.session['current_board']:
-		movePosition = 1
-	elif 4 in request.session['current_board']:
-		movePosition = 3
-	elif 6 in request.session['current_board']:
-		movePosition = 5
-	elif 8 in request.session['current_board']:
-		movePosition = 7
+			move = 1
+
+		elif 3 in request.session['available_moves']:
+
+			move = 3
+
+		elif 7 in request.session['available_moves']:
+
+			move = 7
+
+		elif 9 in request.session['available_moves']:
+
+			move = 9
+
+		elif 5 in request.session['available_moves']:
+
+			move = 5
+
+		elif 2 in request.session['available_moves']:
+
+			move = 2
+
+		elif 4 in request.session['available_moves']:
+	
+			move = 4
+
+		elif 6 in request.session['available_moves']:
+
+			move = 6
+
+		elif 8 in request.session['available_moves']:
+		
+			move = 8
+
+	movePosition = int(move) - 1
+
+	request.session['computer_moves'].append(int(move))
+
+	if is_a_win(request,'computer_moves'):
+
+		request.session['win'] = 'Computer' 
+
+		return request
+
+	request.session['available_moves'].remove(int(move))
 
 	request.session['current_board'][movePosition] = request.session['player'][1] 
-	"""
-	when done set player to next
-	"""
-	request.session['currentPlayer'] = 1
 
-	return move		
+	return request 
 
 def game_board(request,move):
 
@@ -144,7 +211,7 @@ def game_board(request,move):
 
 	elif int(move) > 0 and int(move) < 10:
 
-		computerMove = record_move(request,move)
+		request = record_move(request,move)
 
 	message = 'Make a move'
 
@@ -175,7 +242,10 @@ def game_board(request,move):
 		'otherStaticUri':'http://localhost/tictactoe/',
 		'url':'/tictactoe/',
 		'message':message,
-		'gameStatus':gameStatus,
+		'gameStatus':request.session['available_moves'],
+		'playerMoves':request.session['player_moves'],
+		'computerMoves':request.session['computer_moves'],
+		'win':request.session['win'],
 		'isComputerMove':isComputerMove,
 		'computerMove':computerMove},
 		context_instance=RequestContext(request))
