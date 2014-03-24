@@ -8,5 +8,6 @@ If you don't want to broadcast your intentions by forking this, feel free to clo
 
 We are a Django shop, but it is not a requirement that you implement your program as a Django app.
 
-
 Will start by making some of the required files, templates, models, views
+
+Kept getting interupted last night and got frustrated with a bug I had in the get_a_win logic, but I think I figured it out now. Still want to clean up the code a bit.
