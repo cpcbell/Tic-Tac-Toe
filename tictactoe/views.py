@@ -14,6 +14,8 @@ def available_moves(request):
 
 	request.session['available_moves'] = [1,2,3,4,5,6,7,8,9]
 
+	request.session['available_wins'] = list() 
+
 	request.session['current_board'] = [1,2,3,4,5,6,7,8,9]
 
 	request.session['currentMove'] = 0
@@ -21,11 +23,11 @@ def available_moves(request):
 
 	request.session['player'] = ['X','O']
 
-	request.session['player_moves'] = []
-	request.session['computer_moves'] = []
+	request.session['player_moves'] = list() 
+	request.session['computer_moves'] = list() 
 
-	request.session['winner_moves'] = []
-	request.session['player_winner_moves'] = []
+	request.session['winner_moves'] = list() 
+	request.session['player_winner_moves'] = list() 
 
 	request.session['error'] = None 
 
@@ -39,7 +41,14 @@ def initialize_game(request):
 
 	possible_wins = Wins()
 
+	request.session['possible_wins'] = list(possible_wins.wins)
+
 	available_moves(request)
+
+	for some_wins in possible_wins.wins:
+		
+		request.session['available_wins'].append(some_wins)	
+
 
 def expert_move(move):
 
@@ -81,106 +90,94 @@ def even_number(move):
 	return False
 
 """
-Loop through the Wins model, which is a list of lists with all possible win combos
-
-The player parameter decides which player's "moves list" will be checked for possible wins
-
-This parameter also determines if we are setting a block or a win
-"""
-def get_a_win(request,player):
-
-	wins = Wins()
-
-	request.session['block'] = None
-
-	if len(request.session[player]) > 1:
-
-		for win in request.session['available_moves']:
-
-			"""
-			Make a copy and append possible wins
-			"""
-			copy_player_moves = list(request.session[player])
-
-			if len(copy_player_moves) <= 3:
-
-				copy_player_moves = [request.session[player][-1],request.session[player][-2]]
-
-			elif len(copy_player_moves) > 3:
-
-				copy_player_moves = list(request.session['player_moves']).sort()
-
-			copy_player_moves.append(int(win))
-
-			this_win = []
-
-			for this_win in wins.wins:
-
-				if len(copy_player_moves) > 3:
-
-					this_win.append(int(win))
-
-					this_win.sort()
-
-				request.session['winner_moves'] = list(this_win)
-				request.session['player_winner_moves'] = list(copy_player_moves)
-
-				if set(this_win) == set(copy_player_moves):
-
-					if player is 'player':
-
-						request.session['block'] = win 
-					else:
-						request.session['win'] = win 
-
-	return request 
-		 
-"""
-
 """
 def is_a_win(request,player):
 
 	wins = Wins()
+		
+	for winners in wins.wins:
 
-	if len(request.session[player]) > 2:
+		if winners in request.session['available_wins']:
 
-		copy_list = list(request.session[player])
+			if set(winners) == set(request.session[player]):
 
-		for win in request.session['available_moves']:
+				#request.session['winner_moves'].append(list(winners))
 
-			copy_list.append(int(win))
+				request.session['available_wins'].remove(list(winners))
 
-			copy_list.sort()
-
-			winners = []
-
-			for winners in wins.wins:
-
-				winners.append(int(win))
-
-				winners.sort()
-
-				if set(winners) == set(copy_list):
-
-					request.session['winner_moves'] = list(winners)
-					request.session['player_winner_moves'] = list(copy_list)
-
-					return True
+				return True
 
 	return False
 
-	"""
-		sort_list = list(request.session[player])
-		sort_list.sort()
-		copy_list = [sort_list[-1],sort_list[-2],sort_list[-3]]
-	else:
-		copy_list = list(request.session[player])
-	"""
+def get_a_win(request,player):
 
+	if len(request.session[player]) >= 2:
+
+		for win in request.session['available_moves']:
+
+			copy_list = list(request.session[player])
+
+			if len(request.session[player]) == 2:
+
+				copy_list.append(int(win))
+
+				copy_list.sort()
+
+				request.session['player_winner_moves'] = list(copy_list)
+
+				if is_a_win(request,'player_winner_moves') is True:
+
+					request.session['win'] = win
+
+					del copy_list
+
+					return True
+
+			elif len(request.session[player]) >= 3:
+
+				for thisPosition in range(0,len(request.session[player])):
+
+					copy_list.sort()
+
+					copy_list.pop(thisPosition)
+
+					copy_list.append(int(win))
+
+					copy_list.sort()
+
+					try:
+						del request.session['player_winner_moves']
+					except:
+						None	
+
+					request.session['player_winner_moves'] = [copy_list[0],copy_list[1],copy_list[2]]
+
+					if is_a_win(request,'player_winner_moves') is True:
+
+						request.session['win'] = win
+
+						del copy_list
+
+						return True
+
+					copy_list = list(request.session[player])
+
+			del request.session['player_winner_moves']
+			request.session['player_winner_moves'] = list()
+
+			del copy_list
+
+	return False
 
 def best_move(request):
 
-	if 1 in request.session['available_moves']:
+	move = None
+
+	if 5 in request.session['available_moves']:
+
+		move = 5
+
+	elif 1 in request.session['available_moves']:
 			
 		move = 1
 
@@ -195,10 +192,6 @@ def best_move(request):
 	elif 9 in request.session['available_moves']:
 
 		move = 9
-
-	elif 5 in request.session['available_moves']:
-
-		move = 5
 
 	elif 2 in request.session['available_moves']:
 
@@ -240,6 +233,12 @@ def record_move(request,move):
 
 		return request
 
+	if len(request.session['available_moves']) == 1:
+		
+		request.session['winner'] = 'No one wins, except the Cat.' 
+		
+		return request
+
 	request.session['moveStrength'] = judge_move(int(move))
 
 	request.session['current_board'][movePosition] = request.session['player'][0] 
@@ -250,23 +249,29 @@ def record_move(request,move):
 	"""
 	block the player win
 	"""
-	request = get_a_win(request,'player_moves') 
+	#request = get_a_win(request,'player_moves') 
 
 	"""
 	get the computer win
 	"""
-	request = get_a_win(request,'computer_moves') 
+	#request = get_a_win(request,'computer_moves') 
 
-	if request.session['block'] is not None:
+	if get_a_win(request,'player_moves'):
 
-		move = int(request.session['block'])
+		move = int(request.session['win'])
 
-	elif request.session['win'] is not None:
+	elif get_a_win(request,'computer_moves'):
 
 		move = int(request.session['win'])
 	
 	else:
 		move = best_move(request)
+
+	if move is None:
+
+		request.session['winner'] = 'No one wins, except the Cat.' 
+		
+		return request
 
 	movePosition = int(move) - 1
 
@@ -305,17 +310,17 @@ def game_board(request,move):
 
 		request.session.flush()
 
+		if request.session.get('available_moves') is None:
+
+			initialize_game(request)
+
+			message = 'You are Xs, Please make the first move'
+
 	elif int(move) > 0 and int(move) < 10:
 
 		request = record_move(request,move)
 
-	message = 'Make a move'
-
-	if request.session.get('available_moves') is None:
-
-		initialize_game(request)
-
-		message = 'You are Xs, Please make the first move'
+		message = 'Make a move'
 
 
 	"""
@@ -334,6 +339,11 @@ def game_board(request,move):
 	gameObj = {'name':'Tic-Tac-Toe',
 		'description':''}
 
+	"""
+		'winnerMoves':request.session['winner_moves'],
+		'playerWinnerMoves':request.session['player_winner_moves'],
+	"""
+
 	return render_to_response('tictactoe.html', 
 		{
 		'currentBoard':request.session['current_board'],
@@ -346,8 +356,8 @@ def game_board(request,move):
 		'playerMoves':request.session['player_moves'],
 		'computerMoves':request.session['computer_moves'],
 		'winner':request.session['winner'],
-		'winnerMoves':request.session['winner_moves'],
-		'playerWinnerMoves':request.session['player_winner_moves'],
+		'possibleWins':request.session['possible_wins'],
+		'availableWins':request.session['available_wins'],
 		'isComputerMove':isComputerMove,
 		'computerMove':computerMove},
 		context_instance=RequestContext(request))
